@@ -285,3 +285,13 @@
         vault write aws/config/root access_key={{ lookup('env', 'VAULT_AWS_ACCESS_KEY') }} secret_key={{ lookup('env', 'VAULT_AWS_SECRET_KEY') }} region=us-east-1
       args:
         chdir: /tmp/vault-example-code
+
+    - name: copy custom-mobile-apps-signer IAM policy JSON file into vault container
+      command: docker cp {{ playbook_dir }}/custom-mobile-apps-signer.json vault:/vault/data/custom-mobile-apps-signer.json
+
+    - name: configure the aws custom-mobile-apps-signer
+      command: >
+        docker-compose exec -T vault
+        vault write aws/roles/custom-mobile-apps-signer credential_type=iam_user policy_document=@/vault/data/custom-mobile-apps-signer.json
+      args:
+        chdir: /tmp/vault-example-code
