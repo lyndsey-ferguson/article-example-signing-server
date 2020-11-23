@@ -271,3 +271,17 @@
         connected:
         - "{{ container }}"
         - trusted-entity
+
+    - name: enable the aws secrets engine
+      command: >
+        docker-compose exec -T vault
+        vault secrets enable aws
+      args:
+        chdir: /tmp/vault-example-code
+
+    - name: configure the aws credentials
+      command: >
+        docker-compose exec -T vault
+        vault write aws/config/root access_key={{ lookup('env', 'VAULT_AWS_ACCESS_KEY') }} secret_key={{ lookup('env', 'VAULT_AWS_SECRET_KEY') }} region=us-east-1
+      args:
+        chdir: /tmp/vault-example-code
