@@ -1,0 +1,273 @@
+---
+- hosts: localhost
+  name: "Setup the AppRole Example Vault server"
+  tasks:
+    - name: remove old vault
+      file:
+        path: /tmp/vault-example-code
+        state: absent
+
+    - name: fetch the vault example
+      git:
+        repo: https://github.com/lyndsey-ferguson/article-example-securing-signing-assets.git
+        dest: /tmp/vault-example-code
+
+    - pip:
+        name: docker-compose
+
+    - docker_compose:
+        project_src: /tmp/vault-example-code
+        build: yes
+        recreate: always
+      register: example_vault_server_output
+    
+    - debug:
+        var: example_vault_server_output
+    - set_fact:
+        container: "{{ example_vault_server_output.services.vault.keys() | list | first }}"
+
+    - debug:
+        var: container
+
+      
+    - name: check if vault is initialized
+      command: docker-compose exec -T vault vault status
+      args:
+        chdir: /tmp/vault-example-code
+      # environment:
+      #   COMPOSE_INTERACTIVE_NO_CLI: "1"
+      ignore_errors: True
+      register: vault_init_check_output
+    
+    - debug:
+        var: vault_init_check_output
+        
+    - name: initialize vault
+      command: docker-compose exec -T vault vault operator init
+      args:
+        chdir: /tmp/vault-example-code
+      register: init_vault_output
+      when: vault_init_check_output.stdout | regex_search('Initialized\s+false')
+      
+    - debug:
+        var: init_vault_output
+    
+    - set_fact:
+        unseal_keys: "{{ init_vault_output.stdout_lines[0:5] | map('regex_replace', 'Unseal Key \\d+. (\\S+)', '\\1') | list }}"
+        root_token: "{{ init_vault_output.stdout_lines[6] | regex_replace('Initial Root Token: ', '') }}"
+    
+    - debug:
+        var: unseal_keys
+    
+    - debug:
+        var: root_token
+      
+    - name: unseal vault
+      command: docker-compose exec -T vault vault operator unseal {{ item }}
+      args:
+        chdir: /tmp/vault-example-code
+      loop: "{{ unseal_keys }}"
+
+    - name: login as root
+      command: docker-compose exec -T vault vault login -field=token {{ root_token }}
+      args:
+        chdir: /tmp/vault-example-code
+
+    - name: enable the v2 secrets engine
+      command: docker-compose exec -T vault vault secrets enable -path=secret kv-v2
+      args:
+        chdir: /tmp/vault-example-code
+
+    - name: enable versioned secrets of old format
+      command: docker-compose exec -T vault vault kv enable-versioning secret/
+      args:
+        chdir: /tmp/vault-example-code
+
+    - name: set vault addr env var
+      set_fact:
+        vault_addr: "http://localhost:8200"
+
+    - name: create and secure the encryption keys
+      shell: echo {{ root_token }} | ./create-and-secure-encryption-keys.sh
+      args:
+        chdir: /tmp/vault-example-code
+      environment:
+        VAULT_ADDR: "{{ vault_addr }}"
+
+    - name: create the mobile apps write policy
+      command: >
+        docker-compose exec -T vault
+        vault policy write custom-mobile-apps-write-policy
+        vault/policies/custom-mobile-apps-write-policy.hcl
+      args:
+        chdir: /tmp/vault-example-code
+
+    - name: enable userpass auth backend
+      command: docker-compose exec -T vault vault auth enable userpass 
+      args:
+        chdir: /tmp/vault-example-code
+
+    - name: create a user 
+      command: >
+        docker-compose exec -T vault
+        vault write auth/userpass/users/lyndsey.ferguson
+        password=mypassword
+        policies=custom-mobile-apps-write-policy
+      args:
+        chdir: /tmp/vault-example-code
+    
+    - name: login as user
+      uri:
+        url: "{{ vault_addr }}/v1/auth/userpass/login/lyndsey.ferguson"
+        method: POST
+        body_format: json
+        body:
+          password: "mypassword"
+      register: login_output
+    
+    - debug:
+        var: login_output.json.auth.client_token
+      
+    - name: secure-keychain
+      command: /tmp/vault-example-code/secure-keychain.sh {{ playbook_dir }}/lyndsey.ferguson.keychain-db apns.key
+      environment:
+        VAULT_TOKEN: "{{ login_output.json.auth.client_token }}" 
+        VAULT_ADDR: "{{ vault_addr }}"
+        KEYCHAIN_PASSWORD: lyndsey
+        COMPANY_NAME: lyndsey
+        PATH: '/usr/local/bin:{{ ansible_env.PATH }}'
+    
+    - name: read lyndsey keychain info
+      command: >
+        docker-compose exec -T vault
+        vault kv get -format=json secret/custom-mobile-apps/keychains/lyndsey
+      register: lyndsey_keychain_info
+      args:
+        chdir: /tmp/vault-example-code
+
+    - debug:
+        var: lyndsey_keychain_info.stdout | from_json | json_query('data.data')
+
+    - name: write puppy keychain info
+      shell: |
+        docker-compose exec -T vault bash -c "echo \"{{ lyndsey_keychain_info.stdout | from_json | json_query('data.data') }}\" | sed \"s/'/\\\"/g\" > puppy.json"
+        docker-compose exec -T vault vault kv put secret/custom-mobile-apps/keychains/puppy @puppy.json
+      args:
+        chdir: /tmp/vault-example-code
+
+    - name: create read only policy
+      command: >
+        docker-compose exec -T vault
+        vault policy write custom-mobile-apps-read-policy
+        vault/policies/custom-mobile-apps-read-policy.hcl
+      args:
+        chdir: /tmp/vault-example-code
+
+    - name: create token role that uses the read only policy
+      command: >
+        docker-compose exec -T vault
+        vault write auth/token/roles/custom-mobile-apps-read-policy-create-role
+        allowed_policies=custom-mobile-apps-read-policy
+      args:
+        chdir: /tmp/vault-example-code
+
+    - name: create policy that allows the creation of token
+      command: >
+        docker-compose exec -T vault
+        vault policy write custom-mobile-apps-read-policy-create-role
+        vault/policies/custom-mobile-apps-read-policy-create-token-policy.hcl
+      args:
+        chdir: /tmp/vault-example-code
+
+    - name: update the user account to permit the creation of the token
+      command: >
+        docker-compose exec -T vault
+        vault write auth/userpass/users/lyndsey.ferguson
+        policies="custom-mobile-apps-write-policy,custom-mobile-apps-read-policy-create-role"
+      args:
+        chdir: /tmp/vault-example-code
+
+    - name: re-login as user
+      uri:
+        url: "{{ vault_addr }}/v1/auth/userpass/login/lyndsey.ferguson"
+        method: POST
+        body_format: json
+        body:
+          password: "mypassword"
+      register: login_output
+
+    - name: get the read token for the custom-mobile-apps-read-policy
+      uri:
+        url: "{{ vault_addr }}/v1/auth/token/create/custom-mobile-apps-read-policy-create-role"
+        method: POST
+        headers:
+          "X-Vault-Token": "{{ login_output.json.auth.client_token }}" 
+      register: token_creation_output
+
+    - name: output the token
+      debug:
+        var: token_creation_output.json.auth.client_token
+
+    - name: enable approle
+      command: >
+        docker-compose exec -T vault
+        vault auth enable approle
+      args:
+        chdir: /tmp/vault-example-code
+
+    - name: create the custom-mobile-apps-signer role
+      command: >
+        docker-compose exec -T vault
+        vault write auth/approle/role/custom-mobile-apps-signer
+        token_policies="custom-mobile-apps-read-policy"
+        token_no_default_policy=false
+        secret_id_ttl=55m
+        token_ttl=60m
+        token_max_ttl=90m
+      args:
+        chdir: /tmp/vault-example-code
+        
+    - name: get the role-id for the custom-mobile-apps-signer role
+      command: >
+        docker-compose exec -T vault
+        vault read -field=role_id auth/approle/role/custom-mobile-apps-signer/role-id
+      args:
+        chdir: /tmp/vault-example-code
+      register: get_role_id_output
+
+    - debug:
+        var: get_role_id_output
+
+    - name: update value of the GitHub Role Id secret
+      command: ./update_custom_mobile_apps_secret_id/update_github_secret_value.rb VAULT_CODESIGNING_ROLE_ID {{ get_role_id_output.stdout }}
+    
+    - name: get vault container info
+      docker_container_info:
+        name: "{{ container }}"
+      register: vault_container_info
+
+    - name: build the trusted entity docker image
+      docker_image:
+        build:
+          path: ./update_custom_mobile_apps_secret_id
+          args:
+            VAULT_TOKEN: "{{ root_token }}"
+            VAULT_ADDR: http://{{ vault_container_info.container.NetworkSettings.Networks["vault-net"].IPAddress }}:8200
+        name: trusted-entity
+        source: build
+        force_source: yes
+    
+    - name: run the trusted entity
+      docker_container:
+        name: trusted-entity
+        image: trusted-entity
+        networks:
+        - name: vault-net
+      register: run_trusted_entity_output
+      
+    - name: connect the trusted-entity to the vault network
+      docker_network:
+        name: vault-net
+        connected:
+        - "{{ container }}"
+        - trusted-entity
