@@ -239,8 +239,10 @@
         var: get_role_id_output
 
     - name: update value of the GitHub Role Id secret
-      command: ./update_custom_mobile_apps_secret_id/update_github_secret_value.rb VAULT_CODESIGNING_ROLE_ID {{ get_role_id_output.stdout }}
-    
+      command: ../update_custom_mobile_apps_secret_id/update_dot_env.rb VAULT_CODESIGNING_ROLE_ID {{ get_role_id_output.stdout }}
+      args:
+        chdir: "{{ playbook_dir}}/server"
+
     - name: get vault container info
       docker_container_info:
         name: "{{ container }}"
@@ -263,6 +265,9 @@
         image: trusted-entity
         networks:
         - name: vault-net
+        volumes:
+          - "{{ playbook_dir }}/server/.env:/usr/src/app/.env"
+
       register: run_trusted_entity_output
       
     - name: connect the trusted-entity to the vault network

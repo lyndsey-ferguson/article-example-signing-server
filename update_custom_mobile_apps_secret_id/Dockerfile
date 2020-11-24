@@ -10,16 +10,6 @@ RUN bundle config
 
 WORKDIR /usr/src/app
 
-ADD https://download.libsodium.org/libsodium/releases/LATEST.tar.gz ./
-RUN tar -zxvf LATEST.tar.gz
-
-WORKDIR ./libsodium-stable
-RUN ./configure
-RUN make && make check
-RUN make install
-RUN ldconfig
-
-WORKDIR ..
 COPY Gemfile update-public-repos-token.txt ./
 RUN bundle install
 
