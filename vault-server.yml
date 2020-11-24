@@ -295,3 +295,15 @@
         vault write aws/roles/custom-mobile-apps-signer credential_type=iam_user policy_document=@/vault/data/custom-mobile-apps-signer.json
       args:
         chdir: /tmp/vault-example-code
+
+    - name: copy custom mobile apps read policy into vault container
+      command: docker cp {{ playbook_dir }}/custom-mobile-apps-read-policy.hcl vault:/vault/policies/custom-mobile-apps-read-policy.hcl
+
+    - name: update read only policy
+      command: >
+        docker-compose exec -T vault
+        vault policy write custom-mobile-apps-read-policy
+        /vault/policies/custom-mobile-apps-read-policy.hcl
+      args:
+        chdir: /tmp/vault-example-code
+    

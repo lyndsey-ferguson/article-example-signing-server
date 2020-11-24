@@ -1,0 +1,37 @@
+{
+    "Version": "2012-10-17",
+    "Id": "CustomMobileAppsSignerPolicy",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::ldf-custom-mobile-apps/requests/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObjet"
+            ],
+            "Resource": [
+                "arn:aws:s3:::ldf-custom-mobile-apps/builds/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sqs:ReceiveMessage",
+                "sqs:SendMessage",
+                "sqs:DeleteMessage"
+            ],
+            "Resource": [
+                "arn:aws:sqs:us-east-1:492939359554:CustomMobileAppsQueue"
+            ]
+        }
+    ]
+}
