@@ -2,6 +2,13 @@
 - hosts: localhost
   name: "Setup the AppRole Example Vault server"
   tasks:
+    - name: fail playbook when no AWS credentials provided in environment
+      fail: msg="Unable to provision AWS auth backend without the VAULT_AWS_ACCESS_KEY or VAULT_AWS_SECRET_KEY environment variables"
+      when: item == ""
+      with_items:
+        - "{{ lookup('env', 'VAULT_AWS_ACCESS_KEY') }}"
+        - "{{ lookup('env', 'VAULT_AWS_SECRET_KEY') }}"
+
     - name: remove old vault
       file:
         path: /tmp/vault-example-code

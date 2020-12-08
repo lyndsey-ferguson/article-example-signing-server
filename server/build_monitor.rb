@@ -1,8 +1,28 @@
 #!/usr/bin/env ruby
 
 require 'aws-sdk'
-require 'dotenv/load'
+require 'date'
+require 'dotenv'
 require 'tmpdir'
+require 'vault'
+require 'byebug'
+
+byebug
+Dotenv.load(File.join(__dir__, '.env'))
+
+Vault.address = 'http://127.0.0.1:8200'
+Vault.auth.approle(
+  ENV['VAULT_CODESIGNING_ROLE_ID'],
+  ENV['VAULT_CODESIGNING_SECRET_ID']
+)
+
+aws_secret = Vault.logical.read('aws/creds/custom-mobile-apps-signer')
+Aws.config.update({
+  credentials: Aws::Credentials.new(
+    aws_secret['access_key'],
+    aws_secret['secret_key']
+  )
+})
 
 sqs = Aws::SQS::Client.new(region: 'us-east-1')
 

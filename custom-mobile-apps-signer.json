@@ -1,6 +1,5 @@
 {
     "Version": "2012-10-17",
-    "Id": "CustomMobileAppsSignerPolicy",
     "Statement": [
         {
             "Effect": "Allow",
