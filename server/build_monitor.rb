@@ -7,7 +7,6 @@ require 'tmpdir'
 require 'vault'
 require 'byebug'
 
-byebug
 Dotenv.load(File.join(__dir__, '.env'))
 
 Vault.address = 'http://127.0.0.1:8200'
@@ -15,12 +14,12 @@ Vault.auth.approle(
   ENV['VAULT_CODESIGNING_ROLE_ID'],
   ENV['VAULT_CODESIGNING_SECRET_ID']
 )
-
 aws_secret = Vault.logical.read('aws/creds/custom-mobile-apps-signer')
+sleep 10 # give time for the IAM credentials to become valid
 Aws.config.update({
   credentials: Aws::Credentials.new(
-    aws_secret['access_key'],
-    aws_secret['secret_key']
+    aws_secret.data[:access_key],
+    aws_secret.data[:secret_key]
   )
 })
 
