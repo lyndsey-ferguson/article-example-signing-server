@@ -3,6 +3,7 @@
 require 'aws-sdk'
 require 'date'
 require 'dotenv'
+require 'fastlane'
 require 'tmpdir'
 require 'vault'
 require 'byebug'
@@ -39,5 +40,7 @@ poller.poll do |msg|
   company_assets_zip = Dir::Tmpname.create(['downloaded', '.zip']) {}
   obj.get(response_target: company_assets_zip)
   puts company_assets_zip
-
+  Dotenv.load(File.join(__dir__, '.env'))
+  
+  `VAULT_APPROLE_ROLE_ID=#{ENV['VAULT_CODESIGNING_ROLE_ID']} VAULT_APPROLE_SECRET_ID=#{ENV['VAULT_CODESIGNING_SECRET_ID']} bundle exec fastlane ios customize_built_app`
 end
