@@ -4,7 +4,7 @@ require 'aws-sdk'
 require 'dotenv/load'
 require 'tmpdir'
 
-# Dotenv.load('../.env')
+Dotenv.load('../.env')
 
 sqs = Aws::SQS::Client.new(region: 'us-east-1')
 
