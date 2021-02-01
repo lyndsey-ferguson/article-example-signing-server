@@ -40,6 +40,14 @@ Dir.chdir(fastlane_dir) do
   s3 = Aws::S3::Resource.new(region: 'us-east-1')
 
   poller.poll do |msg|
+    Dotenv.load(File.join(__dir__, '.env'))
+    Vault.auth.approle(
+      ENV['VAULT_CODESIGNING_ROLE_ID'],
+      ENV['VAULT_CODESIGNING_SECRET_ID']
+    )
+    ENV['VAULT_APPROLE_ROLE_ID'] = ENV['VAULT_CODESIGNING_ROLE_ID']
+    ENV['VAULT_APPROLE_SECRET_ID'] = ENV['VAULT_CODESIGNING_SECRET_ID']
+
     build_request = JSON.parse(msg.body)
     puts build_request
 
@@ -69,6 +77,5 @@ Dir.chdir(fastlane_dir) do
       signed: true
     )
 
-    Dotenv.load(File.join(__dir__, '.env'))
   end
 end
