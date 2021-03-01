@@ -2,7 +2,6 @@ require 'yaml'
 require_relative 'binary_plist'
 require_relative 'ios_customize_build'
 
-require 'pry-byebug'
 
 def customize_built_app(options)
   # a handy default for quick iterations
@@ -11,7 +10,6 @@ def customize_built_app(options)
 
   customer_appiconset_dirpath = File.absolute_path("#{customer_assets_dirpath}/#{customer_assets}.appiconset")
   customer_profile_pathname = File.absolute_path("#{customer_assets_dirpath}/#{customer_assets}.mobileprovision")
-  byebug
   zip_package_path = download_latest_release()
 
   custom_built_app_path = File.expand_path(File.join('~/Desktop', "#{customer_assets}.ipa"))

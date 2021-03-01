@@ -19,7 +19,7 @@ def customize_built_app(options)
   welcome_message = options[:welcome_message] unless options[:welcome_message].nil?
   background_color = options[:background_color] unless options[:background_color].nil?
 
-  example_apk_path = download_latest_release
+  example_apk_path = download_latest_release()
   # unzip the apk into a tmp directory
 
   custom_built_app_path = File.expand_path(File.join('~/Desktop', "#{customer_assets}.apk"))
