@@ -21,7 +21,9 @@ platform :ios do
   desc 'download, customize, and sign the app according to customer\'s needs'
   lane :customize_built_app do |options|
     require_relative 'ios_customize_built_app'
-    customize_built_app(options)
+    require_relative 'x_upload_built_app'
+    built_ios_ipa = customize_built_app(options)
+    upload_built_app(built_ios_ipa, options[:customer_name], :ios)
   end
 end
 
@@ -43,6 +45,8 @@ platform :android do
 
   lane :customize_built_app do |options|
     require_relative 'android_customize_built_app'
-    customize_built_app(options)
+    require_relative 'x_upload_built_app'
+    built_android_apk = customize_built_app(options)
+    upload_built_app(build_android_apk, options[:customer_name], :android)
   end
 end

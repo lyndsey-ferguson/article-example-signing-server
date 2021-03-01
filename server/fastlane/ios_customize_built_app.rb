@@ -75,6 +75,7 @@ def customize_built_app(options)
     end
   end
   puts "Built mobile app: #{custom_built_app_path}"
+  custom_built_app_path
 end
 
 

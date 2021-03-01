@@ -69,6 +69,7 @@ def customize_built_app(options)
   )
   FastlaneCore::Helper.hide_loading_indicator
   puts "Built mobile app: #{custom_built_app_path}"
+  custom_built_app_path
 end
 
 def replace_launcher_images(customer_assets_dir)
