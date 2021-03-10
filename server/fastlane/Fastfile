@@ -22,8 +22,11 @@ platform :ios do
   lane :customize_built_app do |options|
     require_relative 'ios_customize_built_app'
     require_relative 'x_upload_built_app'
+    require_relative 'x_send_uploaded_build_notification'
+
     built_ios_ipa = customize_built_app(options)
-    upload_built_app(built_ios_ipa, options[:customer_name], :ios)
+    uploaded_s3_path = upload_built_app(built_ios_ipa, options[:customer_name], :ios)
+    send_uploaded_build_notification(uploaded_s3_path, options[:customer_name])
   end
 end
 
@@ -46,7 +49,10 @@ platform :android do
   lane :customize_built_app do |options|
     require_relative 'android_customize_built_app'
     require_relative 'x_upload_built_app'
+    require_relative 'x_send_uploaded_build_notification'
+
     built_android_apk = customize_built_app(options)
-    upload_built_app(build_android_apk, options[:customer_name], :android)
+    uploaded_s3_path = upload_built_app(build_android_apk, options[:customer_name], :android)
+    send_uploaded_build_notification(uploaded_s3_path, options[:customer_name])
   end
 end
