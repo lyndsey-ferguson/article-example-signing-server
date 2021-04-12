@@ -26,11 +26,19 @@
             "Effect": "Allow",
             "Action": [
                 "sqs:ReceiveMessage",
-                "sqs:SendMessage",
                 "sqs:DeleteMessage"
             ],
             "Resource": [
                 "arn:aws:sqs:us-east-1:492939359554:CustomMobileAppsQueue"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sqs:SendMessage"
+            ],
+            "Resource": [
+                "https://sqs.us-east-1.amazonaws.com/492939359554/BuiltCustomMobileAppsQueue"
             ]
         }
     ]
