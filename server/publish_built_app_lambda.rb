@@ -1,0 +1,31 @@
+require 'json'
+require 'aws-sdk'
+
+def lambda_handler(event: , context:)
+    batch_processes=[]
+    puts event.to_json
+    event['Records'].each do |message|
+        publish_message(message)
+    end
+end
+
+def publish_message(message)
+    sns = Aws::SNS::Client.new
+    
+    company = message['company']
+    object_key = message['output_build']
+    
+    subject = "A new mobile app for #{company} has been created"
+    message = """
+A new build has been created for #{company}. Please visit <URL> to download the app.
+    """
+    response = sns.publish(
+        topic_arn: 'arn:aws:sns:us-east-1:492939359554:BuiltCustomMobileAppEmailSNS',    
+        message: message,
+        subject: subject
+    )
+ 
+    # Print out the response
+    puts(response)
+end
+

@@ -76,19 +76,5 @@ Dir.chdir(fastlane_dir) do
       assets_dir: company_assets_dir,
       signed: true
     )
-
-  obj_key = File.join('builds', File.basename(output_build), DateTime.now.rfc3339(0))
-  obj = s3.bucket('ldf-custom-mobile-apps').object(obj_key)
-  obj.upload(output_build)
-
-  BUILD_COMPLETE_QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/492939359554/BuiltCustomMobileAppsQueue'
-  message - {
-    company: company_name,
-    output_build: obj_key
-  }
-  sqs.send_message(
-    queue_url: BUILD_COMPLETE_QUEUE_URL,
-    message_body: message.to_json
-  )
   end
 end

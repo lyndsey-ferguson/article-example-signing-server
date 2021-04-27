@@ -38,7 +38,7 @@
                 "sqs:SendMessage"
             ],
             "Resource": [
-                "https://sqs.us-east-1.amazonaws.com/492939359554/BuiltCustomMobileAppsQueue"
+                "arn:aws:sqs:us-east-1:492939359554:BuiltCustomMobileAppsQueue"
             ]
         }
     ]
