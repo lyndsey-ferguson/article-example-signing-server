@@ -4,8 +4,8 @@ require 'aws-sdk'
 def lambda_handler(event: , context:)
     batch_processes=[]
     puts event.to_json
-    event['Records'].each do |message|
-        publish_message(message)
+    event['Records'].each do |record|
+        publish_message(JSON.parse(record['body']))
     end
 end
 
@@ -28,4 +28,3 @@ A new build has been created for #{company}. Please visit <URL> to download the 
     # Print out the response
     puts(response)
 end
-
