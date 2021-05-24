@@ -13,11 +13,11 @@ def publish_message(message)
     sns = Aws::SNS::Client.new
     
     company = message['company']
-    object_key = message['output_build']
+    build_url = message['build_url']
     
     subject = "A new mobile app for #{company} has been created"
     message = """
-A new build has been created for #{company}. Please visit <URL> to download the app.
+A new build has been created for #{company}. Please visit #{build_url} to download the app.
     """
     response = sns.publish(
         topic_arn: 'arn:aws:sns:us-east-1:492939359554:BuiltCustomMobileAppEmailSNS',    

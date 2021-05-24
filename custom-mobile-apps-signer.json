@@ -4,8 +4,16 @@
         {
             "Effect": "Allow",
             "Action": [
+              "s3:ListBucket"
+            ],
+            "Resource": [ 
+              "arn:aws:s3:::ldf-custom-mobile-apps"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
                 "s3:GetObject",
-                "s3:ListBucket",
                 "s3:DeleteObject"
             ],
             "Resource": [
@@ -16,7 +24,9 @@
         {
             "Effect": "Allow",
             "Action": [
-                "s3:PutObject"
+                "s3:PutObject",
+                "s3:PutObjectAcl",
+                "s3:DeleteObject"
             ],
             "Resource": [
                 "arn:aws:s3:::ldf-custom-mobile-apps/builds/*"
