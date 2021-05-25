@@ -11,6 +11,12 @@ def upload_built_app(app_path, customer_name, platform)
   obj = bucket.object(app_key)
   puts "obj.upload_file(#{app_path}, acl: 'public-read')"
   obj.upload_file(app_path, acl: 'public-read')
-  obj.presigned_request(:get_object, acl: 'public-read')
+  signer.presigned_url(
+    :get_object,
+    {
+      bucket: 'ldf-custom-mobile-apps',
+      key: app_key
+    }
+  )
 end
 
