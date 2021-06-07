@@ -5,7 +5,9 @@ on:
 
 jobs:
   process_mobile_build_request:
-    if: github.event.issue.state == 'open' && github.event.label == 'mobile-build-requested'
+    # if: github.event.issue.state == 'open' && github.event.label == 'mobile-build-requested'
     runs-on: ubuntu-latest
     steps:
       - run: echo "label changed for ${{ github.event.issue.html_url }}"
+      - run: echo "github.event.issue = ${{ github.event.issue }}"
+      - run: echo "github.event.label = ${{ github.event.label }}"
