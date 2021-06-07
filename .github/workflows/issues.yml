@@ -1,10 +1,10 @@
 name: Issue Events
 on:
-  label:
-    types: [created]
+  issues:
+    types: [labeled]
 
 jobs:
   process_mobile_build_request:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "label changed for ${{ github.event.repository.issues_url }}"
+      - run: echo "label changed for ${{ github.event.issue.html_url }}"
