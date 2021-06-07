@@ -9,5 +9,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "label changed for ${{ github.event.issue.html_url }}"
-      - run: echo "github.event.issue = ${{ github.event.issue }}"
-      - run: echo "github.event.label = ${{ github.event.label }}"
+      - run: echo "github.event.issue = ${{ toJSON(github.event.issue) }}"
+      - run: echo "github.event.label = ${{ toJSON(github.event.label) }}"
