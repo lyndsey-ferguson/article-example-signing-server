@@ -11,4 +11,4 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Respond to build request
-        run: ./.github/scripts/mobile-build-request-responder.rb github.event.issue.url
+        run: ./.github/scripts/mobile-build-request-responder.rb ${{ github.event.issue.url }}
