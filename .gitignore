@@ -1,3 +1,8 @@
 .env
 update-public-repos-token.txt
 
+.github_token
+apns.key
+.byebug_history
+*.keychain-db
+*.swp

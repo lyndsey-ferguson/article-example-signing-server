@@ -10,5 +10,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Bundle install
+        run: bundle install --gemfile=./.github/scripts/Gemfile
       - name: Respond to build request
-        run: ./.github/scripts/mobile-build-request-responder.rb ${{ github.event.issue.url }}
+        run: bundle exec ./.github/scripts/mobile-build-request-responder.rb ${{ github.event.issue.number }}
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
