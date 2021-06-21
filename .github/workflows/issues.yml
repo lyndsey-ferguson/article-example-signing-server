@@ -8,8 +8,6 @@ jobs:
     if: github.event.issue.state == 'open' && github.event.label.name == 'mobile-build-requested'
     runs-on: ubuntu-latest
     steps:
-      - run: echo "label changed for ${{ github.event.issue.html_url }}"
-      - run: echo "github ${{ toJSON(github) }}"
       - name: Checkout
         uses: actions/checkout@v2
       - name: Respond to build request
